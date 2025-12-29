@@ -1,0 +1,151 @@
+/*
+ Theme Name:   CDG Custom
+ Theme URI:    https://crawforddesigngroup.com
+ Description:  Crawford Design Group custom Divi child theme. Requires the CDG Core mu-plugin for full functionality.
+ Author:       Crawford Design Group
+ Author URI:   https://crawforddesigngroup.com
+ Template:     Divi
+ Version:      3.10.5
+ License:      Proprietary
+ Text Domain:  cdg-custom
+ Requires at least: 6.0
+ Requires PHP: 8.0
+*/
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+/**
+ * Accessibility: Focus States
+ */
+:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cdg-focus-color, #2271b1);
+  outline-offset: 2px;
+}
+
+/**
+ * Skip Link
+ */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 999999;
+  padding: 1rem;
+  background: #000;
+  color: #fff;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ==========================================================================
+   Responsive Utilities
+   ========================================================================== */
+
+/**
+ * Responsive Images
+ */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/**
+ * Aspect Ratio Containers
+ */
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.aspect-ratio-1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+  }
+
+  abbr[title]::after {
+    content: " (" attr(title) ")";
+  }
+
+  a[href^="#"]::after,
+  a[href^="javascript:"]::after {
+    content: "";
+  }
+
+  pre,
+  blockquote {
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  /* Hide non-essential elements */
+  #main-header,
+  #main-footer,
+  .et_pb_section.hide-on-print,
+  nav,
+  aside {
+    display: none !important;
+  }
+}
