@@ -2,23 +2,24 @@
 
 A streamlined Divi child theme focused exclusively on Divi-specific functionality. WordPress core optimizations, security hardening, and agency features are handled by the **CDG Core mu-plugin**.
 
-## Version 2.0.0
+## Version 2.1.0
 
 ### Requirements
 
 - WordPress 6.0+
 - PHP 8.0+
 - Divi 4.0+ (Divi 5 supported)
-- **CDG Core mu-plugin** (for full functionality)
+- **CDG Core mu-plugin** (recommended for full functionality)
 
 ### Architecture
 
 This child theme follows a separation of concerns principle:
 
-| Component | Location | Responsibility |
-|-----------|----------|----------------|
-| **CDG Child Theme** | `/wp-content/themes/cdg-custom/` | Divi-specific functionality |
+| Component              | Location                           | Responsibility                            |
+| ---------------------- | ---------------------------------- | ----------------------------------------- |
+| **CDG Child Theme**    | `/wp-content/themes/cdg-custom/`   | Divi-specific functionality               |
 | **CDG Core mu-plugin** | `/wp-content/mu-plugins/cdg-core/` | WordPress optimizations & agency features |
+| **SpinupWP**           | Server level                       | Caching, performance, security headers    |
 
 ### What This Theme Handles
 
@@ -27,9 +28,9 @@ This child theme follows a separation of concerns principle:
 - ✅ ACF Local JSON configuration
 - ✅ Divi-specific asset loading
 - ✅ Dynamic CSS minification
-- ✅ Builder layout caching
 - ✅ Navigation menu registration
 - ✅ Theme support declarations
+- ✅ Subfooter copyright styling
 
 ### What CDG Core Handles
 
@@ -47,88 +48,106 @@ This child theme follows a separation of concerns principle:
 - CPT Dashboard widgets
 - Admin branding
 
+### What SpinupWP Handles
+
+- Page caching (Nginx FastCGI)
+- Object caching (Redis)
+- Script/style optimization
+- Security headers
+- SSL/TLS
+
 ## File Structure
 
 ```
 cdg-custom/
-├── functions.php           # Main theme bootstrap
-├── style.css               # Theme header & base styles
-├── README.md               # This file
+├── functions.php                     # Main theme bootstrap
+├── style.css                         # Theme header & base styles
+├── README.md                         # This file
 ├── inc/
 │   ├── class-cdg-theme.php           # Main theme controller
 │   ├── class-cdg-optimizations.php   # Divi-specific optimizations
-│   ├── class-cdg-assets-manager.php  # Asset enqueueing
-│   └── class-cdg-logger.php          # Simple logging
-├── acf-json/               # ACF Local JSON (auto-created)
+│   └── class-cdg-assets-manager.php  # Asset enqueueing
+├── acf-json/                         # ACF Local JSON (auto-created)
 ├── assets/
 │   ├── css/
-│   │   └── custom.css      # Optional custom styles
+│   │   └── custom.css                # Optional custom styles
 │   └── js/
-│       └── custom.js       # Optional custom scripts
-└── languages/              # Translation files
+│       └── custom.js                 # Optional custom scripts
+└── languages/                        # Translation files
 ```
 
-## Configuration
+## Features
 
-### Environment Constants
+### ACF Local JSON
 
-Add to `wp-config.php` as needed:
+The theme automatically configures ACF Pro to save and load field groups from the `acf-json/` directory. This enables:
 
-```php
-// Logging level: debug, info, warning, error
-define('CDG_LOG_LEVEL', 'error');
+- Version control for field groups
+- Faster field group loading
+- Easy deployment across environments
 
-// Enable/disable script deferring
-define('CDG_DEFER_SCRIPTS', true);
+### Subfooter CSS Classes
 
-// Enable/disable theme caching
-define('CDG_CACHE_ENABLED', true);
+The theme provides two CSS classes for footer copyright text:
+
+- `.cdg-subfooter-info-light` - Dark text for light backgrounds
+- `.cdg-subfooter-info-dark` - Light text for dark backgrounds
+
+These automatically append the site title and "All Rights Reserved" text using CSS `::after` pseudo-elements.
+
+**Usage in Divi:**
+Add a Code module with an empty `<span>` element:
+
+```html
+<span class="cdg-subfooter-info-light">© 2025</span>
 ```
 
-### Environment Detection
+**Customization via CSS variables:**
 
-The theme automatically detects the WordPress environment and adjusts:
+```css
+:root {
+  --cdg-subfooter-color-light: #333;
+  --cdg-subfooter-color-dark: #f4f4f4;
+  --cdg-subfooter-font-size: 1em;
+  --cdg-subfooter-font-weight: 600;
+}
+```
 
-| Environment | Log Level | Caching |
-|-------------|-----------|---------|
-| Production | error | Enabled |
-| Staging | debug | Disabled |
-| Development | debug | Disabled |
-| Local | debug | Disabled |
-
-## Integration with CDG Core
-
-The theme checks for CDG Core presence and displays status in the admin:
-
-**Tools → CDG Theme Status**
-
-If CDG Core is not detected, a notice is displayed recommending installation.
-
-## Divi 5 Support
+### Divi 5 Support
 
 The theme automatically detects Divi 5 and enables:
 
 - `et-builder-5` theme support
 - `et-builder-performance` theme support
 - Enhanced module performance settings
-- Builder layout caching
 
-## Site-Specific Customizations
+## Admin Status Page
 
-Some features in this theme are site-specific:
+View theme status at **Tools → CDG Theme Status**, which displays:
 
-- **Directory CPT menu hiding** - Modify in `functions.php`
-- **Custom navigation menus** - Modify in `class-cdg-theme.php`
+- Theme version
+- Divi version and mode (4.x or 5.x)
+- PHP and WordPress versions
+- CDG Core plugin status
 
 ## Changelog
 
+### 2.1.0
+
+- Removed script deferral (was breaking ACF admin interface)
+- Removed caching code (SpinupWP handles this at server level)
+- Removed logger class and environment detection
+- Removed redundant post type support removal
+- Simplified theme architecture
+- Fixed ACF Pro field group editing issue
+
 ### 2.0.0
+
 - Separated WordPress optimizations into CDG Core mu-plugin
 - Streamlined theme to Divi-specific functionality only
 - Added CDG Core detection and status
 - Improved Divi 5 support
-- Fixed autoloader path handling
-- Added sanitization for builder detection
 
 ### 1.0.0
-- Initial release (all-in-one theme)
+
+- Initial release
