@@ -2,8 +2,10 @@
 /**
  * Divi Optimizations Class
  *
- * Handles Divi-specific performance optimizations including
- * ACF Local JSON and dynamic CSS minification.
+ * Handles Divi-specific functionality including ACF Local JSON configuration
+ * and Divi 5 theme support.
+ *
+ * Note: CSS/HTML minification and caching are handled by SpinupWP at the server level.
  *
  * @package CDG_Custom
  * @since 2.0.0
@@ -12,7 +14,7 @@
 declare(strict_types=1);
 
 /**
- * CDG_Optimizations handles Divi-specific performance optimizations.
+ * CDG_Optimizations handles Divi-specific optimizations.
  */
 class CDG_Optimizations
 {
@@ -51,40 +53,16 @@ class CDG_Optimizations
    */
   private function setup_hooks(): void
   {
-    // ACF optimization.
-    add_action("acf/init", [$this, "optimize_acf"]);
+    // ACF Local JSON configuration.
+    add_action("acf/init", [$this, "configure_acf"]);
 
-    // Divi specific optimizations.
-    if ($this->theme && $this->theme->get_divi_version()) {
-      $this->setup_divi_optimizations();
-    }
-  }
-
-  /**
-   * Setup Divi-specific optimizations.
-   *
-   * @return void
-   */
-  private function setup_divi_optimizations(): void
-  {
-    // Optimize Divi Builder loading.
-    add_filter("et_builder_load_requests", [
-      $this,
-      "optimize_builder_requests",
-    ]);
-
-    // Divi 5 specific optimizations.
+    // Divi 5 specific support.
     if ($this->theme && $this->theme->is_divi_5()) {
-      add_action("et_builder_ready", [$this, "optimize_divi_5_builder"]);
       add_filter("et_builder_module_performance", [
         $this,
         "enhance_module_performance",
       ]);
     }
-
-    // Optimize Divi dynamic CSS.
-    add_filter("et_use_dynamic_css", "__return_true");
-    add_filter("et_dynamic_css_custom_css", [$this, "minify_dynamic_css"]);
   }
 
   /**
@@ -126,11 +104,11 @@ class CDG_Optimizations
   }
 
   /**
-   * Optimize ACF.
+   * Configure ACF Local JSON and admin visibility.
    *
    * @return void
    */
-  public function optimize_acf(): void
+  public function configure_acf(): void
   {
     if (!class_exists("ACF")) {
       return;
@@ -170,22 +148,7 @@ class CDG_Optimizations
   }
 
   /**
-   * Optimize Divi 5 builder.
-   *
-   * @return void
-   */
-  public function optimize_divi_5_builder(): void
-  {
-    add_filter(
-      "et_module_shortcode_output",
-      [$this, "optimize_module_output"],
-      10,
-      3
-    );
-  }
-
-  /**
-   * Enhance module performance.
+   * Enhance Divi 5 module performance settings.
    *
    * @param array<string, mixed> $performance Performance settings.
    * @return array<string, mixed>
@@ -193,104 +156,7 @@ class CDG_Optimizations
   public function enhance_module_performance(array $performance): array
   {
     $performance["lazy_load"] = true;
-    $performance["minify_output"] = true;
 
     return $performance;
-  }
-
-  /**
-   * Optimize builder requests.
-   *
-   * @param array<string, mixed> $requests Builder requests.
-   * @return array<string, mixed>
-   */
-  public function optimize_builder_requests(array $requests): array
-  {
-    if (isset($requests["modules"])) {
-      $requests["modules"] = array_unique($requests["modules"]);
-    }
-
-    return $requests;
-  }
-
-  /**
-   * Optimize module output.
-   *
-   * @param string $output      Module output.
-   * @param string $render_slug Render slug.
-   * @param object $module      Module object.
-   * @return string
-   */
-  public function optimize_module_output(
-    string $output,
-    string $render_slug,
-    $module
-  ): string {
-    // Only minify on frontend, not in builder.
-    if (!is_admin() && $this->theme && !$this->theme->is_builder_active()) {
-      $output = $this->minify_html($output);
-    }
-
-    return $output;
-  }
-
-  /**
-   * Minify dynamic CSS.
-   *
-   * @param string $css CSS to minify.
-   * @return string
-   */
-  public function minify_dynamic_css(string $css): string
-  {
-    // Remove comments.
-    $css = preg_replace("!/\*[^*]*\*+([^/][^*]*\*+)*/!", "", $css);
-
-    // Remove whitespace.
-    $css = str_replace(["\r\n", "\r", "\n", "\t"], "", $css);
-
-    // Remove multiple spaces.
-    $css = preg_replace("/\s+/", " ", $css);
-
-    // Remove spaces around specific characters.
-    $css = preg_replace("/\s*([{}:;,])\s*/", '$1', $css);
-
-    return trim($css);
-  }
-
-  /**
-   * Minify HTML.
-   *
-   * @param string $html HTML to minify.
-   * @return string
-   */
-  private function minify_html(string $html): string
-  {
-    // Preserve pre, textarea, script, style content.
-    $preserved = [];
-    $html = preg_replace_callback(
-      '/<(pre|textarea|script|style).*?<\/\1>/si',
-      function ($matches) use (&$preserved) {
-        $key = "<!--PRESERVED" . count($preserved) . "-->";
-        $preserved[$key] = $matches[0];
-        return $key;
-      },
-      $html
-    );
-
-    // Remove HTML comments (except preserved markers).
-    $html = preg_replace("/<!--(?!PRESERVED)[^>]*-->/", "", $html);
-
-    // Remove whitespace between tags.
-    $html = preg_replace("/>\s+</", "><", $html);
-
-    // Remove multiple spaces.
-    $html = preg_replace("/\s+/", " ", $html);
-
-    // Restore preserved content.
-    foreach ($preserved as $key => $value) {
-      $html = str_replace($key, $value, $html);
-    }
-
-    return trim($html);
   }
 }

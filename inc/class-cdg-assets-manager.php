@@ -2,7 +2,7 @@
 /**
  * Assets Manager Class
  *
- * Handles theme asset loading with Divi-specific optimizations.
+ * Handles theme asset loading.
  *
  * @package CDG_Custom
  * @since 2.0.0
@@ -55,18 +55,13 @@ class CDG_Assets_Manager
    */
   public function enqueue_styles(): void
   {
-    // Parent theme style - always load for proper inheritance.
+    // Parent theme style.
     wp_enqueue_style(
       "divi-parent-style",
       get_template_directory_uri() . "/style.css",
       [],
       $this->theme ? $this->theme->get_divi_version() : null
     );
-
-    // Skip child theme styles in Visual Builder to prevent layout issues.
-    if ($this->theme && $this->is_builder_active_safe()) {
-      return;
-    }
 
     // Child theme style.
     wp_enqueue_style(
@@ -95,11 +90,6 @@ class CDG_Assets_Manager
    */
   public function enqueue_scripts(): void
   {
-    // Don't load in builder.
-    if ($this->theme && $this->is_builder_active_safe()) {
-      return;
-    }
-
     // Custom scripts (if file exists).
     $custom_js_path = get_stylesheet_directory() . "/assets/js/custom.js";
     if (file_exists($custom_js_path)) {
@@ -123,11 +113,6 @@ class CDG_Assets_Manager
    */
   public function add_subfooter_css(): void
   {
-    // Skip in builder.
-    if ($this->theme && $this->is_builder_active_safe()) {
-      return;
-    }
-
     $site_title = get_bloginfo("name");
 
     // Escape for CSS content property.
@@ -218,42 +203,5 @@ class CDG_Assets_Manager
     );
 
     return $string;
-  }
-
-  /**
-   * Safe wrapper for checking if builder is active.
-   *
-   * Provides multiple fallback checks for reliable detection.
-   *
-   * @return bool
-   */
-  private function is_builder_active_safe(): bool
-  {
-    // Primary check: URL parameter (most reliable early detection).
-    if (
-      isset($_GET["et_fb"]) &&
-      sanitize_text_field(wp_unslash($_GET["et_fb"])) === "1"
-    ) {
-      return true;
-    }
-
-    // Secondary check: Theme method (if available).
-    if ($this->theme && method_exists($this->theme, "is_builder_active")) {
-      return $this->theme->is_builder_active();
-    }
-
-    // Tertiary check: Direct Divi function checks.
-    if (
-      function_exists("et_builder_is_frontend_editor") &&
-      et_builder_is_frontend_editor()
-    ) {
-      return true;
-    }
-
-    if (function_exists("et_core_is_fb_enabled") && et_core_is_fb_enabled()) {
-      return true;
-    }
-
-    return false;
   }
 }
