@@ -98,34 +98,6 @@ add_action(
 );
 
 /**
- * Optimize queries for slide posts.
- *
- * When Posts are renamed to Slides via CDG Core, this optimizes
- * the default query for better performance.
- */
-add_action("pre_get_posts", function (WP_Query $query): void {
-  if (is_admin() || !$query->is_main_query()) {
-    return;
-  }
-
-  // Optimize slide/post queries on archives.
-  if ($query->is_home() || $query->is_post_type_archive("post")) {
-    $query->set("orderby", "menu_order");
-    $query->set("order", "ASC");
-    $query->set("posts_per_page", 10);
-
-    // Skip counting total rows if not paginated.
-    if (!$query->is_paged()) {
-      $query->set("no_found_rows", true);
-    }
-
-    // Skip meta/term caching for performance.
-    $query->set("update_post_meta_cache", false);
-    $query->set("update_post_term_cache", false);
-  }
-});
-
-/**
  * Add theme support for modern features.
  */
 add_action(
