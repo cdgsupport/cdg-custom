@@ -2,8 +2,7 @@
 /**
  * Divi Optimizations Class
  *
- * Handles Divi-specific functionality including ACF Local JSON configuration
- * and Divi 5 theme support.
+ * Handles Divi-specific functionality including ACF Local JSON configuration.
  *
  * Note: CSS/HTML minification and caching are handled by SpinupWP at the server level.
  *
@@ -55,17 +54,6 @@ class CDG_Optimizations
   {
     // ACF Local JSON configuration.
     add_action("acf/init", [$this, "configure_acf"]);
-<<<<<<< HEAD
-=======
-
-    // Divi 5 specific support.
-    if ($this->theme && $this->theme->is_divi_5()) {
-      add_filter("et_builder_module_performance", [
-        $this,
-        "enhance_module_performance",
-      ]);
-    }
->>>>>>> main
   }
 
   /**
@@ -149,20 +137,4 @@ class CDG_Optimizations
 
     return $paths;
   }
-<<<<<<< HEAD
-=======
-
-  /**
-   * Enhance Divi 5 module performance settings.
-   *
-   * @param array<string, mixed> $performance Performance settings.
-   * @return array<string, mixed>
-   */
-  public function enhance_module_performance(array $performance): array
-  {
-    $performance["lazy_load"] = true;
-
-    return $performance;
-  }
->>>>>>> main
 }
