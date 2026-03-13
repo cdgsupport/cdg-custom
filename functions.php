@@ -96,30 +96,3 @@ add_action(
   },
   10
 );
-<<<<<<< HEAD
-=======
-
-/**
- * Add theme support for modern features.
- */
-add_action(
-  "after_setup_theme",
-  function (): void {
-    // Responsive embeds.
-    add_theme_support("responsive-embeds");
-
-    // Editor styles.
-    add_theme_support("editor-styles");
-
-    // Wide alignment.
-    add_theme_support("align-wide");
-
-    // Custom line height.
-    add_theme_support("custom-line-height");
-
-    // Custom units.
-    add_theme_support("custom-units", "rem", "em", "vh", "vw");
-  },
-  20
-);
->>>>>>> main
