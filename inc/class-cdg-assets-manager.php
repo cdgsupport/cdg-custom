@@ -2,7 +2,7 @@
 /**
  * Assets Manager Class
  *
- * Handles theme asset loading with Divi-specific optimizations.
+ * Handles theme asset loading.
  *
  * @package CDG_Custom
  * @since 2.0.0
@@ -90,11 +90,6 @@ class CDG_Assets_Manager
    */
   public function enqueue_scripts(): void
   {
-    // Don't load in builder.
-    if ($this->theme && $this->theme->is_builder_active()) {
-      return;
-    }
-
     // Custom scripts (if file exists).
     $custom_js_path = get_stylesheet_directory() . "/assets/js/custom.js";
     if (file_exists($custom_js_path)) {
@@ -118,11 +113,6 @@ class CDG_Assets_Manager
    */
   public function add_subfooter_css(): void
   {
-    // Skip in builder.
-    if ($this->theme && $this->theme->is_builder_active()) {
-      return;
-    }
-
     $site_title = get_bloginfo("name");
 
     // Escape for CSS content property.
@@ -199,9 +189,18 @@ class CDG_Assets_Manager
    */
   private function escape_css_content(string $string): string
   {
-    // Escape backslashes first, then single quotes.
+    // Escape backslashes first.
     $string = str_replace("\\", "\\\\", $string);
+
+    // Escape single quotes.
     $string = str_replace("'", "\\'", $string);
+
+    // Escape newlines and tabs for CSS content property.
+    $string = str_replace(
+      ["\r\n", "\r", "\n", "\t"],
+      ["\\A", "\\A", "\\A", "\\9"],
+      $string
+    );
 
     return $string;
   }

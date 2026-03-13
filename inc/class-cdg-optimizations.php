@@ -55,6 +55,17 @@ class CDG_Optimizations
   {
     // ACF Local JSON configuration.
     add_action("acf/init", [$this, "configure_acf"]);
+<<<<<<< HEAD
+=======
+
+    // Divi 5 specific support.
+    if ($this->theme && $this->theme->is_divi_5()) {
+      add_filter("et_builder_module_performance", [
+        $this,
+        "enhance_module_performance",
+      ]);
+    }
+>>>>>>> main
   }
 
   /**
@@ -138,4 +149,20 @@ class CDG_Optimizations
 
     return $paths;
   }
+<<<<<<< HEAD
+=======
+
+  /**
+   * Enhance Divi 5 module performance settings.
+   *
+   * @param array<string, mixed> $performance Performance settings.
+   * @return array<string, mixed>
+   */
+  public function enhance_module_performance(array $performance): array
+  {
+    $performance["lazy_load"] = true;
+
+    return $performance;
+  }
+>>>>>>> main
 }
