@@ -20,25 +20,16 @@ if (!defined("ABSPATH")) {
 define("CDG_THEME_VERSION", wp_get_theme()->get("Version"));
 
 /**
- * Autoloader for theme classes.
+ * Load theme classes explicitly.
  *
- * @param string $class The class name to load.
- * @return void
+ * Replaces spl_autoload_register to avoid filesystem checks on every
+ * class resolution. Divi 5 resolves significantly more classes than
+ * Divi 4, making the autoloader a measurable overhead on every request.
  */
-spl_autoload_register(function (string $class): void {
-  $prefix = "CDG_";
-
-  if (strpos($class, $prefix) !== 0) {
-    return;
-  }
-
-  $class_file = "class-" . str_replace("_", "-", strtolower($class)) . ".php";
-  $file_path = get_stylesheet_directory() . "/inc/" . $class_file;
-
-  if (file_exists($file_path)) {
-    require_once $file_path;
-  }
-});
+$cdg_inc_dir = get_stylesheet_directory() . "/inc/";
+require_once $cdg_inc_dir . "class-cdg-theme.php";
+require_once $cdg_inc_dir . "class-cdg-optimizations.php";
+require_once $cdg_inc_dir . "class-cdg-assets-manager.php";
 
 /**
  * Load theme text domain for internationalization.
@@ -56,6 +47,15 @@ add_action(
 
 /**
  * Initialize the theme with error handling.
+ *
+ * This single callback handles:
+ * - Divi parent theme validation
+ * - Theme initialization (CDG_Theme singleton)
+ * - Gutenberg/block-editor theme support declarations
+ *
+ * Theme support for Divi-specific features (title-tag, post-thumbnails,
+ * html5, nav menus, etc.) is handled in CDG_Theme::theme_setup() at
+ * priority 15 to avoid duplication.
  */
 add_action(
   "after_setup_theme",
@@ -95,56 +95,4 @@ add_action(
     }
   },
   10
-);
-
-/**
- * Optimize queries for slide posts.
- *
- * When Posts are renamed to Slides via CDG Core, this optimizes
- * the default query for better performance.
- */
-add_action("pre_get_posts", function (WP_Query $query): void {
-  if (is_admin() || !$query->is_main_query()) {
-    return;
-  }
-
-  // Optimize slide/post queries on archives.
-  if ($query->is_home() || $query->is_post_type_archive("post")) {
-    $query->set("orderby", "menu_order");
-    $query->set("order", "ASC");
-    $query->set("posts_per_page", 10);
-
-    // Skip counting total rows if not paginated.
-    if (!$query->is_paged()) {
-      $query->set("no_found_rows", true);
-    }
-
-    // Skip meta/term caching for performance.
-    $query->set("update_post_meta_cache", false);
-    $query->set("update_post_term_cache", false);
-  }
-});
-
-/**
- * Add theme support for modern features.
- */
-add_action(
-  "after_setup_theme",
-  function (): void {
-    // Responsive embeds.
-    add_theme_support("responsive-embeds");
-
-    // Editor styles.
-    add_theme_support("editor-styles");
-
-    // Wide alignment.
-    add_theme_support("align-wide");
-
-    // Custom line height.
-    add_theme_support("custom-line-height");
-
-    // Custom units.
-    add_theme_support("custom-units", "rem", "em", "vh", "vw");
-  },
-  20
 );

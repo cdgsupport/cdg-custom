@@ -2,13 +2,13 @@
 
 A streamlined Divi child theme focused exclusively on Divi-specific functionality. WordPress core optimizations, security hardening, and agency features are handled by the **CDG Core mu-plugin**.
 
-## Version 2.1.0
+## Version 2.2.0
 
 ### Requirements
 
 - WordPress 6.0+
 - PHP 8.0+
-- Divi 4.0+ (Divi 5 supported)
+- Divi 4.0+ (Divi 5 compatible)
 - **CDG Core mu-plugin** (recommended for full functionality)
 
 ### Architecture
@@ -24,17 +24,15 @@ This child theme follows a separation of concerns principle:
 ### What This Theme Handles
 
 - ✅ Divi version detection (4.x and 5.x)
-- ✅ Divi Builder optimizations
 - ✅ ACF Local JSON configuration
 - ✅ Divi-specific asset loading
-- ✅ Dynamic CSS minification
 - ✅ Navigation menu registration
 - ✅ Theme support declarations
 - ✅ Subfooter copyright styling
 
 ### What CDG Core Handles
 
-- WordPress head cleanup
+- WordPress head cleanup (including generator tag removal)
 - Emoji removal
 - Security hardening (XML-RPC, uploads, etc.)
 - Dashboard widget removal
@@ -65,7 +63,7 @@ cdg-custom/
 ├── README.md                         # This file
 ├── inc/
 │   ├── class-cdg-theme.php           # Main theme controller
-│   ├── class-cdg-optimizations.php   # Divi-specific optimizations
+│   ├── class-cdg-optimizations.php   # ACF Local JSON & Divi optimizations
 │   └── class-cdg-assets-manager.php  # Asset enqueueing
 ├── acf-json/                         # ACF Local JSON (auto-created)
 ├── assets/
@@ -80,7 +78,9 @@ cdg-custom/
 
 ### ACF Local JSON
 
-The theme automatically configures ACF Pro to save and load field groups from the `acf-json/` directory. This enables:
+The theme automatically configures ACF Pro to save and load field groups from the `acf-json/` directory.
+
+This enables:
 
 - Version control for field groups
 - Faster field group loading
@@ -113,24 +113,32 @@ Add a Code module with an empty `<span>` element:
 }
 ```
 
-### Divi 5 Support
+### Divi 5 Compatibility
 
-The theme automatically detects Divi 5 and enables:
+The theme automatically detects Divi 5 via parent theme version comparison. The `is_divi_5()` method is available for conditional logic in theme components and can be used by CDG Core or custom code as needed.
 
-- `et-builder-5` theme support
-- `et-builder-performance` theme support
-- Enhanced module performance settings
+No unverified Divi 5 hooks or theme support flags are registered — the theme relies only on documented WordPress and Divi APIs.
 
 ## Admin Status Page
 
 View theme status at **Tools → CDG Theme Status**, which displays:
 
 - Theme version
-- Divi version and mode (4.x or 5.x)
+- Divi version and detection (4.x or 5.x)
 - PHP and WordPress versions
 - CDG Core plugin status
 
 ## Changelog
+
+### 2.2.0
+
+- **Replaced autoloader with explicit requires** — Removed `spl_autoload_register` that was triggering filesystem checks (`file_exists`) on every class PHP resolved. Divi 5's larger class footprint made this a measurable memory overhead on every request. The three theme classes are now loaded via direct `require_once` calls.
+- **Removed unverified Divi 5 hooks** — Removed `init_divi_5_features()` and its four placeholder hook registrations (`et_builder_load_requests`, `et_builder_modules_loaded`, `et_core_page_resource_hints`, `et_builder_ready`) plus five empty/pass-through callback methods. These Divi 4 builder hooks may not exist or may behave differently in Divi 5's rewritten architecture. Also removed `et_builder_module_performance` filter from `CDG_Optimizations`.
+- **Removed unverified Divi 5 theme support flags** — Removed `add_theme_support('et-builder-5')` and `add_theme_support('et-builder-performance')` which are not documented in Divi 5's official resources.
+- **Consolidated `after_setup_theme` callbacks** — Reduced from four callbacks (priorities 5, 10, 15, 20) to three (5, 10, 15). Moved block editor theme support (`editor-styles`, `align-wide`, `custom-line-height`, `custom-units`) into `CDG_Theme::theme_setup()`. Eliminated duplicate `responsive-embeds` declaration.
+- **Fixed Divi version detection** — Changed primary detection source from `ET_CORE_VERSION` to `wp_get_theme('Divi')->get('Version')`. In Divi 5, ET Core is architecturally separate and its version may not match the theme version. `ET_CORE_VERSION` is retained as a fallback only.
+- **Removed duplicate generator filter** — Removed `the_generator` filter from theme (already handled by CDG Core's cleanup class when `remove_wp_version` is enabled).
+- **Updated admin status page** — Changed "Divi 5 Support" label to "Divi 5 Detected" to accurately reflect informational status.
 
 ### 2.1.0
 

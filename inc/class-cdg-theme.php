@@ -78,19 +78,21 @@ class CDG_Theme
   /**
    * Detect Divi version and capabilities.
    *
+   * Uses the parent theme version as the primary source. ET_CORE_VERSION
+   * is a separate component that may not match the actual Divi theme
+   * version, especially in Divi 5 where the architecture changed.
+   *
    * @return void
    */
   private function detect_divi_version(): void
   {
-    // Check ET Core version first (most accurate).
-    if (defined("ET_CORE_VERSION")) {
+    // Use parent theme version as primary source.
+    $parent_theme = wp_get_theme("Divi");
+    if ($parent_theme->exists()) {
+      $this->divi_version = $parent_theme->get("Version");
+    } elseif (defined("ET_CORE_VERSION")) {
+      // Fallback to ET Core version if parent theme object unavailable.
       $this->divi_version = ET_CORE_VERSION;
-    } else {
-      // Fallback to parent theme version.
-      $parent_theme = wp_get_theme("Divi");
-      if ($parent_theme->exists()) {
-        $this->divi_version = $parent_theme->get("Version");
-      }
     }
 
     // Check if it's Divi 5 or higher.
@@ -111,35 +113,11 @@ class CDG_Theme
       $this->safe_init_component("assets", "CDG_Assets_Manager");
       $this->safe_init_component("optimizations", "CDG_Optimizations");
 
-      // Initialize Divi 5 specific components if applicable.
-      if ($this->is_divi_5) {
-        $this->init_divi_5_features();
-      }
-
       $this->initialized = true;
     } catch (Exception $e) {
       error_log("CDG Theme initialization error: " . $e->getMessage());
       $this->initialized = false;
     }
-  }
-
-  /**
-   * Initialize Divi 5 specific features.
-   *
-   * @return void
-   */
-  private function init_divi_5_features(): void
-  {
-    add_action("et_builder_ready", [$this, "setup_divi_5_builder"]);
-    add_filter("et_builder_load_requests", [
-      $this,
-      "optimize_builder_requests",
-    ]);
-    add_action("et_builder_modules_loaded", [$this, "register_custom_modules"]);
-    add_filter("et_core_page_resource_hints", [
-      $this,
-      "add_divi_5_resource_hints",
-    ]);
   }
 
   /**
@@ -174,20 +152,26 @@ class CDG_Theme
   private function setup_hooks(): void
   {
     add_action("after_setup_theme", [$this, "theme_setup"], 15);
-    add_filter("the_generator", "__return_empty_string");
     add_action("admin_init", [$this, "health_check"]);
     add_action("admin_notices", [$this, "check_compatibility"]);
     add_action("admin_menu", [$this, "add_admin_menu"]);
+
+    // Note: Generator tag removal (the_generator filter) is handled by
+    // CDG Core's cleanup class when remove_wp_version is enabled.
   }
 
   /**
    * Theme setup.
    *
+   * Consolidated theme support declarations. This is the single
+   * location for all add_theme_support calls to avoid duplication
+   * across multiple after_setup_theme callbacks.
+   *
    * @return void
    */
   public function theme_setup(): void
   {
-    // Add theme support.
+    // Core WordPress theme support.
     add_theme_support("title-tag");
     add_theme_support("post-thumbnails");
     add_theme_support("html5", [
@@ -201,16 +185,16 @@ class CDG_Theme
       "navigation-widgets",
     ]);
 
-    // Modern theme support.
+    // Modern WordPress theme support.
     add_theme_support("responsive-embeds");
     add_theme_support("automatic-feed-links");
     add_theme_support("customize-selective-refresh-widgets");
 
-    // Divi 5 specific support.
-    if ($this->is_divi_5) {
-      add_theme_support("et-builder-5");
-      add_theme_support("et-builder-performance");
-    }
+    // Block editor support.
+    add_theme_support("editor-styles");
+    add_theme_support("align-wide");
+    add_theme_support("custom-line-height");
+    add_theme_support("custom-units", "rem", "em", "vh", "vw");
 
     // Register navigation menus.
     $this->register_nav_menus();
@@ -303,20 +287,17 @@ class CDG_Theme
                         </tr>
                         <tr>
                             <th scope="row"><?php esc_html_e(
-                              "Divi 5 Support",
+                              "Divi 5 Detected",
                               "cdg-custom"
                             ); ?></th>
                             <td>
                                 <?php if ($this->is_divi_5): ?>
                                     <span class="dashicons dashicons-yes-alt" style="color: #00a32a;"></span>
-                                    <?php esc_html_e(
-                                      "Enabled",
-                                      "cdg-custom"
-                                    ); ?>
+                                    <?php esc_html_e("Yes", "cdg-custom"); ?>
                                 <?php else: ?>
                                     <span class="dashicons dashicons-minus" style="color: #dba617;"></span>
                                     <?php esc_html_e(
-                                      "Divi 4 Mode",
+                                      "No (Divi 4)",
                                       "cdg-custom"
                                     ); ?>
                                 <?php endif; ?>
@@ -435,62 +416,29 @@ class CDG_Theme
   }
 
   /**
-   * Setup Divi 5 builder.
+   * Check if builder is active (sanitized).
    *
-   * @return void
+   * @return bool
    */
-  public function setup_divi_5_builder(): void
+  public function is_builder_active(): bool
   {
-    add_filter("et_builder_module_settings", [
-      $this,
-      "customize_module_settings",
-    ]);
-  }
+    // Divi 5 check.
+    if (function_exists("et_builder_is_frontend_editor")) {
+      return et_builder_is_frontend_editor();
+    }
 
-  /**
-   * Optimize builder requests.
-   *
-   * @param array<string, mixed> $requests Builder requests.
-   * @return array<string, mixed>
-   */
-  public function optimize_builder_requests(array $requests): array
-  {
-    return $requests;
-  }
+    // Divi 4 check.
+    if (function_exists("et_core_is_fb_enabled")) {
+      return et_core_is_fb_enabled();
+    }
 
-  /**
-   * Register custom modules.
-   *
-   * @return void
-   */
-  public function register_custom_modules(): void
-  {
-    // Register custom Divi modules here.
-  }
+    // URL parameter check (sanitized).
+    if (isset($_GET["et_fb"])) {
+      // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+      return sanitize_text_field(wp_unslash($_GET["et_fb"])) === "1"; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    }
 
-  /**
-   * Add Divi 5 resource hints.
-   *
-   * @param array<string> $hints Resource hints.
-   * @return array<string>
-   */
-  public function add_divi_5_resource_hints(array $hints): array
-  {
-    $hints[] = "https://fonts.googleapis.com";
-    $hints[] = "https://fonts.gstatic.com";
-
-    return $hints;
-  }
-
-  /**
-   * Customize module settings.
-   *
-   * @param array<string, mixed> $settings Module settings.
-   * @return array<string, mixed>
-   */
-  public function customize_module_settings(array $settings): array
-  {
-    return $settings;
+    return false;
   }
 
   /**
@@ -532,31 +480,5 @@ class CDG_Theme
   public function is_divi_5(): bool
   {
     return $this->is_divi_5;
-  }
-
-  /**
-   * Check if builder is active (sanitized).
-   *
-   * @return bool
-   */
-  public function is_builder_active(): bool
-  {
-    // Divi 5 check.
-    if (function_exists("et_builder_is_frontend_editor")) {
-      return et_builder_is_frontend_editor();
-    }
-
-    // Divi 4 check.
-    if (function_exists("et_core_is_fb_enabled")) {
-      return et_core_is_fb_enabled();
-    }
-
-    // URL parameter check (sanitized).
-    if (isset($_GET["et_fb"])) {
-      // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-      return sanitize_text_field(wp_unslash($_GET["et_fb"])) === "1"; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-    }
-
-    return false;
   }
 }
