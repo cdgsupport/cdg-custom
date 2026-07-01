@@ -45,13 +45,6 @@ class CDG_Theme
   private ?string $divi_version = null;
 
   /**
-   * Is Divi 5.
-   *
-   * @var bool
-   */
-  private bool $is_divi_5 = false;
-
-  /**
    * Get theme instance.
    *
    * @return CDG_Theme
@@ -76,11 +69,14 @@ class CDG_Theme
   }
 
   /**
-   * Detect Divi version and capabilities.
+   * Detect Divi version.
    *
    * Uses the parent theme version as the primary source. ET_CORE_VERSION
    * is a separate component that may not match the actual Divi theme
-   * version, especially in Divi 5 where the architecture changed.
+   * version.
+   *
+   * CDG standardizes on Divi 5 across all sites, so this is used purely
+   * for display on the status page — no version comparison is performed.
    *
    * @return void
    */
@@ -93,11 +89,6 @@ class CDG_Theme
     } elseif (defined("ET_CORE_VERSION")) {
       // Fallback to ET Core version if parent theme object unavailable.
       $this->divi_version = ET_CORE_VERSION;
-    }
-
-    // Check if it's Divi 5 or higher.
-    if ($this->divi_version) {
-      $this->is_divi_5 = version_compare($this->divi_version, "5.0", ">=");
     }
   }
 
@@ -287,24 +278,6 @@ class CDG_Theme
                         </tr>
                         <tr>
                             <th scope="row"><?php esc_html_e(
-                              "Divi 5 Detected",
-                              "cdg-custom"
-                            ); ?></th>
-                            <td>
-                                <?php if ($this->is_divi_5): ?>
-                                    <span class="dashicons dashicons-yes-alt" style="color: #00a32a;"></span>
-                                    <?php esc_html_e("Yes", "cdg-custom"); ?>
-                                <?php else: ?>
-                                    <span class="dashicons dashicons-minus" style="color: #dba617;"></span>
-                                    <?php esc_html_e(
-                                      "No (Divi 4)",
-                                      "cdg-custom"
-                                    ); ?>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><?php esc_html_e(
                               "PHP Version",
                               "cdg-custom"
                             ); ?></th>
@@ -377,6 +350,9 @@ class CDG_Theme
   /**
    * Check compatibility.
    *
+   * CDG standardizes on Divi 5 across all sites, so only the PHP version
+   * requirement is checked here.
+   *
    * @return void
    */
   public function check_compatibility(): void
@@ -396,20 +372,6 @@ class CDG_Theme
             "cdg-custom"
           ),
           PHP_VERSION
-        )
-      );
-    }
-
-    // Check Divi version.
-    if (
-      $this->divi_version &&
-      version_compare($this->divi_version, "4.0", "<")
-    ) {
-      printf(
-        '<div class="notice notice-warning"><p>%s</p></div>',
-        esc_html__(
-          "CDG Theme works best with Divi 4.0 or higher. Please update Divi for optimal performance.",
-          "cdg-custom"
         )
       );
     }
@@ -435,7 +397,7 @@ class CDG_Theme
     // URL parameter check (sanitized).
     if (isset($_GET["et_fb"])) {
       // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-      return sanitize_text_field(wp_unslash($_GET["et_fb"])) === "1"; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+      return sanitize_text_field(wp_unslash($_GET["et_fb"])) === "1";
     }
 
     return false;
@@ -470,15 +432,5 @@ class CDG_Theme
   public function get_divi_version(): ?string
   {
     return $this->divi_version;
-  }
-
-  /**
-   * Check if Divi 5.
-   *
-   * @return bool
-   */
-  public function is_divi_5(): bool
-  {
-    return $this->is_divi_5;
   }
 }

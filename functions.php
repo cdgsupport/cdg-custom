@@ -51,11 +51,13 @@ add_action(
  * This single callback handles:
  * - Divi parent theme validation
  * - Theme initialization (CDG_Theme singleton)
- * - Gutenberg/block-editor theme support declarations
  *
  * Theme support for Divi-specific features (title-tag, post-thumbnails,
  * html5, nav menus, etc.) is handled in CDG_Theme::theme_setup() at
  * priority 15 to avoid duplication.
+ *
+ * CDG standardizes on Divi 5 across all sites, so only parent theme
+ * existence is validated here — no version comparison is required.
  */
 add_action(
   "after_setup_theme",
@@ -66,14 +68,6 @@ add_action(
       if (!$parent_theme->exists()) {
         throw new RuntimeException(
           "Divi parent theme is required but not installed."
-        );
-      }
-
-      // Check Divi version compatibility.
-      $divi_version = $parent_theme->get("Version");
-      if (version_compare($divi_version, "4.0", "<")) {
-        throw new RuntimeException(
-          "CDG Custom theme requires Divi 4.0 or higher."
         );
       }
 

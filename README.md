@@ -2,13 +2,13 @@
 
 A streamlined Divi child theme focused exclusively on Divi-specific functionality. WordPress core optimizations, security hardening, and agency features are handled by the **CDG Core mu-plugin**.
 
-## Version 2.2.0
+## Version 2.3.0
 
 ### Requirements
 
 - WordPress 6.0+
 - PHP 8.0+
-- Divi 4.0+ (Divi 5 compatible)
+- Divi 5 (standard across all CDG sites)
 - **CDG Core mu-plugin** (recommended for full functionality)
 
 ### Architecture
@@ -23,7 +23,7 @@ This child theme follows a separation of concerns principle:
 
 ### What This Theme Handles
 
-- ✅ Divi version detection (4.x and 5.x)
+- ✅ Divi parent theme validation
 - ✅ ACF Local JSON configuration
 - ✅ Divi-specific asset loading
 - ✅ Navigation menu registration
@@ -85,6 +85,7 @@ This enables:
 - Version control for field groups
 - Faster field group loading
 - Easy deployment across environments
+- Field group editing in wp-admin without requiring a developer
 
 ### Subfooter CSS Classes
 
@@ -113,22 +114,30 @@ Add a Code module with an empty `<span>` element:
 }
 ```
 
-### Divi 5 Compatibility
+### Divi 5 Standard
 
-The theme automatically detects Divi 5 via parent theme version comparison. The `is_divi_5()` method is available for conditional logic in theme components and can be used by CDG Core or custom code as needed.
-
-No unverified Divi 5 hooks or theme support flags are registered — the theme relies only on documented WordPress and Divi APIs.
+CDG now builds exclusively on Divi 5. The theme validates that the Divi parent theme is installed, and displays the detected Divi version on the status page for reference — no version comparison or Divi 4/5 branching logic is performed.
 
 ## Admin Status Page
 
 View theme status at **Tools → CDG Theme Status**, which displays:
 
 - Theme version
-- Divi version and detection (4.x or 5.x)
+- Divi version
 - PHP and WordPress versions
 - CDG Core plugin status
 
 ## Changelog
+
+### 2.3.0
+
+- **Standardized on Divi 5** — CDG now builds exclusively on Divi 5, so all Divi-version-comparison logic has been removed as unnecessary:
+  - Removed the `4.0` minimum-version check (and its `RuntimeException`) from the `after_setup_theme` initialization callback in `functions.php`. Only Divi parent theme existence is now validated.
+  - Removed the `is_divi_5` property and `is_divi_5()` method from `CDG_Theme`.
+  - Simplified `detect_divi_version()` to record the Divi version string for display purposes only — no comparison logic.
+  - Removed the Divi-version warning block from `check_compatibility()`; it now checks PHP version only.
+  - Removed the "Divi 5 Detected" row from the Tools → CDG Theme Status admin page.
+- **Removed duplicate `phpcs:ignore` comment** in `CDG_Theme::is_builder_active()` — the nonce-verification suppression was declared on two adjacent lines; consolidated to one.
 
 ### 2.2.0
 
