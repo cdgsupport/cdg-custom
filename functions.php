@@ -3,7 +3,8 @@
  * CDG Custom Child Theme Functions
  *
  * A streamlined Divi child theme focused on Divi-specific functionality.
- * WordPress core optimizations are handled by the CDG Core mu-plugin.
+ * WordPress core optimizations are handled by the CDG Core plugin
+ * (wp-content/plugins/cdg-core/).
  *
  * @package CDG_Custom
  * @since 2.0.0
@@ -89,4 +90,39 @@ add_action(
     }
   },
   10
+);
+
+/**
+ * Warn admins when the CDG Core plugin isn't active.
+ *
+ * CDG Core (installed as a standard plugin at wp-content/plugins/cdg-core/,
+ * managed via ManageWP) provides WordPress core optimizations, security
+ * hardening, and agency features. It's recommended, not required — this
+ * theme continues to function without it, just in a reduced capacity.
+ * CDG_CORE_VERSION is only defined when the plugin's main file has loaded,
+ * so this doubles as an "is active" check consistent with the status row
+ * on Tools -> CDG Theme Status.
+ *
+ * @return void
+ */
+add_action(
+  "admin_notices",
+  function (): void {
+    if (defined("CDG_CORE_VERSION")) {
+      return;
+    }
+
+    if (!current_user_can("manage_options")) {
+      return;
+    }
+
+    printf(
+      '<div class="notice notice-warning is-dismissible"><p><strong>%s</strong> %s</p></div>',
+      esc_html__("CDG Core plugin not detected:", "cdg-custom"),
+      esc_html__(
+        "Install and activate the CDG Core plugin (wp-content/plugins/cdg-core/) for full functionality, including security hardening and performance optimizations.",
+        "cdg-custom"
+      )
+    );
+  }
 );

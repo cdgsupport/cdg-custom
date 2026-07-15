@@ -1,15 +1,15 @@
 # CDG Custom Child Theme
 
-A streamlined Divi child theme focused exclusively on Divi-specific functionality. WordPress core optimizations, security hardening, and agency features are handled by the **CDG Core mu-plugin**.
+A streamlined Divi child theme focused exclusively on Divi-specific functionality. WordPress core optimizations, security hardening, and agency features are handled by the **CDG Core plugin**.
 
-## Version 2.3.0
+## Version 2.3.1
 
 ### Requirements
 
 - WordPress 6.0+
 - PHP 8.0+
 - Divi 5 (standard across all CDG sites)
-- **CDG Core mu-plugin** (recommended for full functionality)
+- **CDG Core plugin** (recommended for full functionality)
 
 ### Architecture
 
@@ -18,7 +18,7 @@ This child theme follows a separation of concerns principle:
 | Component              | Location                           | Responsibility                            |
 | ---------------------- | ---------------------------------- | ----------------------------------------- |
 | **CDG Child Theme**    | `/wp-content/themes/cdg-custom/`   | Divi-specific functionality               |
-| **CDG Core mu-plugin** | `/wp-content/mu-plugins/cdg-core/` | WordPress optimizations & agency features |
+| **CDG Core plugin**    | `/wp-content/plugins/cdg-core/`    | WordPress optimizations & agency features (managed via ManageWP) |
 | **SpinupWP**           | Server level                       | Caching, performance, security headers    |
 
 ### What This Theme Handles
@@ -128,6 +128,11 @@ View theme status at **Tools → CDG Theme Status**, which displays:
 - CDG Core plugin status
 
 ## Changelog
+
+### 2.3.1
+
+- **Updated CDG Core references from mu-plugin to standard plugin** — CDG Core is now installed at `/wp-content/plugins/cdg-core/` (managed via ManageWP) rather than as a must-use plugin. Updated `style.css`, `functions.php`, `class-cdg-theme.php`, and this README to reflect the new install path.
+- **Added CDG Core detection notice** — `functions.php` now shows a dismissible admin notice (visible to administrators only) when the CDG Core plugin isn't active, reusing the existing `CDG_CORE_VERSION` check. Non-blocking — the theme still initializes normally, since CDG Core is recommended, not required.
 
 ### 2.3.0
 

@@ -314,7 +314,7 @@ class CDG_Theme
                                       "cdg-custom"
                                     ); ?>
                                     <br><small><?php esc_html_e(
-                                      "Install the CDG Core mu-plugin for full functionality.",
+                                      "Install and activate the CDG Core plugin (wp-content/plugins/cdg-core/) for full functionality.",
                                       "cdg-custom"
                                     ); ?></small>
                                 <?php endif; ?>
